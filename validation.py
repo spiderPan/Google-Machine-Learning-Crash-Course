@@ -68,7 +68,7 @@ def train_model(learning_rate, steps, batch_size, training_examples, training_ta
     my_optimizer = tf.contrib.estimator.clip_gradients_by_norm(
         my_optimizer, 5.0)
     linear_regressor = tf.estimator.LinearRegressor(
-        feature_column=construct_feature_columns(training_examples),
+        feature_columns=construct_feature_columns(training_examples),
         optimizer=my_optimizer
     )
 
