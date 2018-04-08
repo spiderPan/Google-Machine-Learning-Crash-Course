@@ -67,11 +67,10 @@ def my_input_fn(features, targets, batch_size=1, shuffle=True, num_epochs=None):
     return features, labels
 
 
-def train_nn_regression_model(learning_rate, steps, batch_size, hidden_units, training_examples, training_targets, validation_examples, validation_targets):
+def train_nn_regression_model(learning_rate, my_optimizer, steps, batch_size, hidden_units, training_examples, training_targets, validation_examples, validation_targets):
     periods = 10
     steps_per_period = steps / periods
 
-    my_optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
     my_optimizer = tf.contrib.estimator.clip_gradients_by_norm(my_optimizer, 5.0)
 
     dnn_regressor = tf.estimator.DNNRegressor(feature_columns=construct_feature_columns(training_examples), hidden_units=hidden_units, optimizer=my_optimizer)
@@ -121,12 +120,16 @@ def train_nn_regression_model(learning_rate, steps, batch_size, hidden_units, tr
 california_housing_dataframe = pd.read_csv('data/california_housing_train.csv', sep=",")
 
 california_housing_dataframe = california_housing_dataframe.reindex(np.random.permutation(california_housing_dataframe.index))
+normalized_dataframe = normalize_linear_scale(preprocess_features(california_housing_dataframe))
+normalized_training_examples = normalized_dataframe.head(12000)
+normalized_validation_examples = normalized_dataframe.tail(5000)
 
 training_dataframe = california_housing_dataframe.head(12000)
+validation_dataframe = california_housing_dataframe.tail(50000)
+
 training_examples = preprocess_features(training_dataframe)
 training_targets = preprocess_targets(training_dataframe)
 
-validation_dataframe = california_housing_dataframe.tail(50000)
 validation_examples = preprocess_features(validation_dataframe)
 validation_targets = preprocess_targets(validation_dataframe)
 
@@ -140,8 +143,13 @@ display.display(training_targets.describe())
 print('Validation targets summary:')
 display.display(validation_targets.describe())
 
-dnn_regressor = train_nn_regression_model(
+normalized_dataframe = normalize_linear_scale(preprocess_features(california_housing_dataframe))
+normalized_training_examples = normalized_dataframe.head(12000)
+normalized_validation_examples = normalized_dataframe.tail(5000)
+
+_, gradient_training_looses, gradient_validation_losses = train_nn_regression_model(
     learning_rate=0.15,
+    my_optimizer=tf.train.GradientDescentOptimizer(learning_rate=0.0007),
     steps=2000,
     batch_size=800,
     hidden_units=[10, 10, 8, 6, 4, 2],
@@ -160,7 +168,6 @@ _, adagrad_training_losses, adagrad_validation_losses = train_nn_regression_mode
     validation_examples=normalized_validation_examples,
     validation_targets=validation_targets)
 
-
 _, adam_training_losses, adam_validation_losses = train_nn_regression_model(
     my_optimizer=tf.train.AdamOptimizer(learning_rate=0.009),
     steps=2000,
@@ -174,6 +181,8 @@ _, adam_training_losses, adam_validation_losses = train_nn_regression_model(
 plt.ylabel("RMSE")
 plt.xlabel("Periods")
 plt.title("Root Mean Squared Error vs. Periods")
+plt.plot(gradient_training_looses, label='Gradient training')
+plt.plot(gradient_validation_losses, label='Gradient validation')
 plt.plot(adagrad_training_losses, label='Adagrad training')
 plt.plot(adagrad_validation_losses, label='Adagrad validation')
 plt.plot(adam_training_losses, label='Adam training')
