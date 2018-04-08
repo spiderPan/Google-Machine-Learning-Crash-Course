@@ -55,6 +55,35 @@ def normalize_linear_scale(examples_dataframe):
     return normalized_dataframe
 
 
+def log_normalize(series):
+    return series.apply(lambda x: math.log(x + 1.0))
+
+
+def clip(series, clip_to_min, clip_to_max):
+    return series.apply(lambda x: (min(max(x, clip_to_min), clip_to_max)))
+
+
+def binary_threshold(series, threshold):
+    return series.apply(lambda x: (1 if x > threshold else 0))
+
+
+def normalize(example_data_frame):
+    normalized_dataframe = pd.DataFrame()
+    normalized_dataframe['households'] = log_normalize(example_data_frame['households'])
+    normalized_dataframe['median_income'] = log_normalize(example_data_frame['median_income'])
+    normalized_dataframe['total_bedrooms'] = log_normalize(example_data_frame['total_bedrooms'])
+
+    normalized_dataframe['housing_median_age'] = linear_scale(example_data_frame['housing_median_age'])
+    normalized_dataframe['latitude'] = linear_scale(example_data_frame['latitude'])
+    normalized_dataframe['longitude'] = linear_scale(example_data_frame['longitude'])
+
+    normalized_dataframe['population'] = linear_scale(clip(example_data_frame['population'], 0, 5000))
+    normalized_dataframe['rooms_per_person'] = linear_scale(clip(example_data_frame['rooms_per_person'], 0, 5))
+    normalized_dataframe['total_rooms'] = linear_scale(clip(example_data_frame['total_rooms'], 0, 10000))
+
+    return normalized_dataframe
+
+
 def my_input_fn(features, targets, batch_size=1, shuffle=True, num_epochs=None):
     features = {key: np.array(value) for key, value in dict(features).items()}
     ds = Dataset.from_tensor_slices((features, targets))
@@ -67,7 +96,7 @@ def my_input_fn(features, targets, batch_size=1, shuffle=True, num_epochs=None):
     return features, labels
 
 
-def train_nn_regression_model(learning_rate, my_optimizer, steps, batch_size, hidden_units, training_examples, training_targets, validation_examples, validation_targets):
+def train_nn_regression_model(my_optimizer, steps, batch_size, hidden_units, training_examples, training_targets, validation_examples, validation_targets):
     periods = 10
     steps_per_period = steps / periods
 
@@ -133,6 +162,8 @@ training_targets = preprocess_targets(training_dataframe)
 validation_examples = preprocess_features(validation_dataframe)
 validation_targets = preprocess_targets(validation_dataframe)
 
+_ = normalized_training_examples.hist(bins=20, figsize=(18, 12), xlabelsize=10)
+
 print('Training examples summary:')
 display.display(training_examples.describe())
 print('Validation examples summary:')
@@ -148,7 +179,6 @@ normalized_training_examples = normalized_dataframe.head(12000)
 normalized_validation_examples = normalized_dataframe.tail(5000)
 
 _, gradient_training_looses, gradient_validation_losses = train_nn_regression_model(
-    learning_rate=0.15,
     my_optimizer=tf.train.GradientDescentOptimizer(learning_rate=0.0007),
     steps=2000,
     batch_size=800,
