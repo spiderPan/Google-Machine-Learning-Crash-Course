@@ -115,7 +115,7 @@ def train_nn_regression_model(learning_rate, steps, batch_size, hidden_units, tr
     print("Final RMSE (on training data):   %0.2f" % training_root_mean_squared_error)
     print("Final RMSE (on validation data): %0.2f" % validation_root_mean_squared_error)
 
-    return dnn_regressor
+    return dnn_regressor, training_rmse, validation_rmse
 
 
 california_housing_dataframe = pd.read_csv('data/california_housing_train.csv', sep=",")
@@ -150,7 +150,7 @@ dnn_regressor = train_nn_regression_model(
     validation_examples=validation_examples,
     validation_targets=validation_targets)
 
-adagrad_dnn_regressor = train_nn_regression_model(
+_, adagrad_training_losses, adagrad_validation_losses = train_nn_regression_model(
     my_optimizer=tf.train.AdagradOptimizer(learning_rate=0.5),
     steps=2000,
     batch_size=50,
@@ -161,8 +161,8 @@ adagrad_dnn_regressor = train_nn_regression_model(
     validation_targets=validation_targets)
 
 
-adam_dnn_regressor = train_nn_regression_model(
-    my_optimizer=tf.train.AdamOptimizer(learning_rate=0.5),
+_, adam_training_losses, adam_validation_losses = train_nn_regression_model(
+    my_optimizer=tf.train.AdamOptimizer(learning_rate=0.009),
     steps=2000,
     batch_size=50,
     hidden_units=[10, 10],
@@ -170,3 +170,12 @@ adam_dnn_regressor = train_nn_regression_model(
     training_targets=training_targets,
     validation_examples=normalized_validation_examples,
     validation_targets=validation_targets)
+
+plt.ylabel("RMSE")
+plt.xlabel("Periods")
+plt.title("Root Mean Squared Error vs. Periods")
+plt.plot(adagrad_training_losses, label='Adagrad training')
+plt.plot(adagrad_validation_losses, label='Adagrad validation')
+plt.plot(adam_training_losses, label='Adam training')
+plt.plot(adam_validation_losses, label='Adam validation')
+_ = plt.legend()
