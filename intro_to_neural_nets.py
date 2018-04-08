@@ -149,3 +149,24 @@ dnn_regressor = train_nn_regression_model(
     training_targets=training_targets,
     validation_examples=validation_examples,
     validation_targets=validation_targets)
+
+adagrad_dnn_regressor = train_nn_regression_model(
+    my_optimizer=tf.train.AdagradOptimizer(learning_rate=0.5),
+    steps=2000,
+    batch_size=50,
+    hidden_units=[10, 10],
+    training_examples=normalized_training_examples,
+    training_targets=training_targets,
+    validation_examples=normalized_validation_examples,
+    validation_targets=validation_targets)
+
+
+adam_dnn_regressor = train_nn_regression_model(
+    my_optimizer=tf.train.AdamOptimizer(learning_rate=0.5),
+    steps=2000,
+    batch_size=50,
+    hidden_units=[10, 10],
+    training_examples=normalized_training_examples,
+    training_targets=training_targets,
+    validation_examples=normalized_validation_examples,
+    validation_targets=validation_targets)
