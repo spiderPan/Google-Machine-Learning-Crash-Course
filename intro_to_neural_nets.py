@@ -41,6 +41,20 @@ def construct_feature_columns(input_features):
     return set([tf.feature_column.numeric_column(my_feature) for my_feature in input_features])
 
 
+def linear_scale(series):
+    min_val = series.min()
+    max_val = series.max()
+    scale = (max_val - min_val) / 2.0
+    return series.apply(lambda x: ((x - min_val) / scale) - 1.0)
+
+
+def normalize_linear_scale(examples_dataframe):
+    normalized_dataframe = pd.DataFrame()
+    for col in examples_dataframe:
+        normalized_dataframe[col] = linear_scale(examples_dataframe[col])
+    return normalized_dataframe
+
+
 def my_input_fn(features, targets, batch_size=1, shuffle=True, num_epochs=None):
     features = {key: np.array(value) for key, value in dict(features).items()}
     ds = Dataset.from_tensor_slices((features, targets))
