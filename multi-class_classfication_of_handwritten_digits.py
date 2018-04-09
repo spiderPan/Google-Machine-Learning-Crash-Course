@@ -151,10 +151,10 @@ def train_nn_regression_model(
     my_optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
     my_optimizer = tf.contrib.estimator.clip_gradients_by_norm(my_optimizer, 5.0)
     classifier = tf.estimator.DNNClassifier(feature_columns=construct_feature_columns(),
-                                           hidden_units=hidden_units,
-                                           n_classes=10,
-                                           optimizer=my_optimizer,
-                                           config=tf.estimator.RunConfig(keep_checkpoint_max=1))
+                                            hidden_units=hidden_units,
+                                            n_classes=10,
+                                            optimizer=my_optimizer,
+                                            config=tf.estimator.RunConfig(keep_checkpoint_max=1))
     print('Training Model...')
     print('LogLoss error (on validation data):')
     training_errors = []
@@ -208,7 +208,7 @@ def train_nn_regression_model(
 
 
 mnist_dataframe = pd.read_csv('data/mnist_train_small.csv', sep=",", header=None)
-mnist_test_dataframe = p.read_csv('data/mnist_test.csv', sep=',', header=None)
+mnist_test_dataframe = pd.read_csv('data/mnist_test.csv', sep=',', header=None)
 mnist_dataframe = mnist_dataframe.head(10000)
 mnist_dataframe = mnist_dataframe.reindex(np.random.permutation(mnist_dataframe.index))
 display.display(mnist_dataframe.head())
@@ -241,3 +241,19 @@ test_predictions = np.array([item['class_ids'][0] for item in test_predictions])
 
 accuracy = metrics.accuracy_score(testing_targets, test_predictions)
 print("Accuracy on test data: %0.2f" % accuracy)
+
+print(classifier.get_variable_names())
+
+weights0 = classifier.get_variable_value('dnn/hiddenlayer_0/kernel')
+
+print('weighs 0 shape:', weights0.shape)
+num_nodes = weights0.shape[1]
+num_rows = int(math.ceil(num_nodes / 10.0))
+fig, axes = plt.subplots(num_rows, 10, figsize=(20, 2 * num_rows))
+for coef, ax in zip(weights0.T, axes.ravel()):
+    # Weights in coef is reshaped from 1x784 to 28x28.
+    ax.matshow(coef.reshape(28, 28), cmap=plt.cm.pink)
+    ax.set_xticks(())
+    ax.set_yticks(())
+
+plt.show()
