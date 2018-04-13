@@ -62,9 +62,9 @@ terms_feature_column = tf.feature_column.categorical_column_with_vocabulary_list
 my_optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
 my_optimizer = tf.contrib.estimator.clip_gradients_by_norm(my_optimizer, 5.0)
 
-feature_columns = [terms_feature_column]
-
-classifier = tf.estimator.DNNClassifier(feature_columns=[tf.feature_column.indicator_column(terms_feature_column)],
+terms_embedding_column = tf.feature_column.embedding_column(categorical_column=terms_feature_column, dimension=2)
+feature_columns = [terms_embedding_column]
+classifier = tf.estimator.DNNClassifier(feature_columns=feature_columns,
                                         hidden_units=[20, 20],
                                         optimizer=my_optimizer)
 
