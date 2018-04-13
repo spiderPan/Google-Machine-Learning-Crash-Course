@@ -66,10 +66,13 @@ terms_embedding_column = tf.feature_column.embedding_column(categorical_column=t
 feature_columns = [terms_embedding_column]
 classifier = tf.estimator.DNNClassifier(feature_columns=feature_columns,
                                         hidden_units=[20, 20],
-                                        optimizer=my_optimizer)
+                                        optimizer=my_optimizer,
+                                        model_dir="./dnn_model")
 
 try:
     classifier.train(input_fn=lambda: _input_fn([train_path]), steps=1000)
+    print(classifier.get_variable_names())
+    print(classifier.get_variable_value('dnn/input_from_feature_columns/input_layer/terms_embedding/embedding_weights').shape)
     evaluation_metrics = classifier.evaluate(input_fn=lambda: _input_fn([train_path]),
                                              steps=1000)
 
