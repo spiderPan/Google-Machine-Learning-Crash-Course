@@ -64,19 +64,25 @@ my_optimizer = tf.contrib.estimator.clip_gradients_by_norm(my_optimizer, 5.0)
 
 feature_columns = [terms_feature_column]
 
-classifier = tf.estimator.LinearClassifier(feature_columns=feature_columns, optimizer=my_optimizer)
-classifier.train(input_fn=lambda: _input_fn([train_path]), steps=1000)
-evaluation_metrics = classifier.evaluate(input_fn=lambda: _input_fn([train_path]),
-                                         steps=1000)
+classifier = tf.estimator.DNNClassifier(feature_columns=[tf.feature_column.indicator_column(terms_feature_column)],
+                                        hidden_units=[20, 20],
+                                        optimizer=my_optimizer)
 
-print("Training set metrics:")
-for m in evaluation_metrics:
-    print(m, evaluation_metrics[m])
-print('---')
+try:
+    classifier.train(input_fn=lambda: _input_fn([train_path]), steps=1000)
+    evaluation_metrics = classifier.evaluate(input_fn=lambda: _input_fn([train_path]),
+                                             steps=1000)
 
-evaluation_metrics = classifier.evaluate(input_fn=lambda: _input_fn([test_path]), steps=1000)
+    print("Training set metrics:")
+    for m in evaluation_metrics:
+        print(m, evaluation_metrics[m])
+    print('---')
 
-print ('Test set metrics:')
-for m in evaluation_metrics:
-    print(m, evaluation_metrics[m])
-print('---')
+    evaluation_metrics = classifier.evaluate(input_fn=lambda: _input_fn([test_path]), steps=1000)
+
+    print('Test set metrics:')
+    for m in evaluation_metrics:
+        print(m, evaluation_metrics[m])
+    print('---')
+except ValueError as err:
+    print(err)
